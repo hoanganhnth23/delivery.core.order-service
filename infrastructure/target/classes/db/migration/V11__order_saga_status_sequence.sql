@@ -1,0 +1,2 @@
+ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS last_saga_status_sequence BIGINT NOT NULL DEFAULT 0;

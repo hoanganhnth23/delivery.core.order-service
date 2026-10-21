@@ -1,0 +1,6 @@
+/Users/a/Documents/private/delivery/backend_delivery/order/application/src/test/java/com/delivery/order/application/CreateOrderWorkflowTest.java
+/Users/a/Documents/private/delivery/backend_delivery/order/application/src/test/java/com/delivery/order/application/CreateStagesTest.java
+/Users/a/Documents/private/delivery/backend_delivery/order/application/src/test/java/com/delivery/order/application/IdempotencyWorkflowTest.java
+/Users/a/Documents/private/delivery/backend_delivery/order/application/src/test/java/com/delivery/order/application/QuoteWorkflowTest.java
+/Users/a/Documents/private/delivery/backend_delivery/order/application/src/test/java/com/delivery/order/application/ReservationWorkflowTest.java
+/Users/a/Documents/private/delivery/backend_delivery/order/application/src/test/java/com/delivery/order/application/VoucherWorkflowTest.java
