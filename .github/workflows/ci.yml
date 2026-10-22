@@ -12,17 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  quality-gate:
-    name: "Stage: Quality Gate (Lint, Test, Security)"
-    uses: hoanganhnth23/delivery.devops.centralized-ci/.github/workflows/quality-java.yml@main
-    with:
-      service_name: "order"
-    secrets: inherit
-
-  dockerize:
-    name: "Stage: Dockerize & Push"
-    needs: [quality-gate]
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+  service-pipeline:
+    name: "Pipeline"
     uses: hoanganhnth23/delivery.devops.centralized-ci/.github/workflows/build-java.yml@main
     with:
       service_name: "order"
