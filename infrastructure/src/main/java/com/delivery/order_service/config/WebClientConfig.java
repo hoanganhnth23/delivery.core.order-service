@@ -2,7 +2,6 @@ package com.delivery.order_service.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -34,7 +33,6 @@ public class WebClientConfig {
     }
 
     @Bean
-    @LoadBalanced
     public WebClient.Builder webClientBuilder(
             ConnectionProvider orderHttpConnectionProvider,
             @Value("${app.http.connect-timeout-ms:500}") int connectTimeoutMs,
@@ -56,7 +54,6 @@ public class WebClientConfig {
     }
     
     @Bean
-    @LoadBalanced
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
