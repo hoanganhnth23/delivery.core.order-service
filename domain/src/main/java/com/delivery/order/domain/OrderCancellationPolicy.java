@@ -35,13 +35,22 @@ public final class OrderCancellationPolicy {
     }
 
     /** The food went back to the restaurant after a failed delivery: the order ends as cancelled. */
-    public enum FailedDelivery { APPLY, ALREADY_APPLIED, IGNORE }
+    public enum FailedDelivery { APPLY, ALREADY_APPLIED, IGNORE, NOT_YET }
 
-    /** Only an order that was out for delivery can end as a failed delivery. */
+    /**
+     * Delivery owns the outcome and reports it directly, while Order learns
+     * pick-up/delivering through Dispatch, so Order's own status may lag behind:
+     * ASSIGNED is applied, earlier statuses wait (NOT_YET -> retried), and an
+     * order that already ended differently is left alone.
+     */
     public static FailedDelivery onDeliveryReturned(OrderStatus status) {
-        if (status == OrderStatus.CANCELLED) return FailedDelivery.ALREADY_APPLIED;
-        if (status == OrderStatus.PICKED_UP || status == OrderStatus.DELIVERING) return FailedDelivery.APPLY;
-        return FailedDelivery.IGNORE;
+        if (status == null) return FailedDelivery.IGNORE;
+        return switch (status) {
+            case CANCELLED -> FailedDelivery.ALREADY_APPLIED;
+            case ASSIGNED, PICKED_UP, DELIVERING -> FailedDelivery.APPLY;
+            case PENDING, CONFIRMED, FINDING_SHIPPER, WAIT_SHIPPER_CONFIRM -> FailedDelivery.NOT_YET;
+            case DELIVERED, SHIPPER_NOT_FOUND -> FailedDelivery.IGNORE;
+        };
     }
 
     public static String failedDeliveryReason(String deliveryReason) {

@@ -44,6 +44,16 @@ public final class SagaStatusPolicy {
         return List.of(target);
     }
 
+    /**
+     * Pick-up/delivering relayed by Dispatch can arrive after the order already
+     * ended as a failed delivery (Delivery reports that directly). Such updates
+     * are stale and must not reopen a cancelled order.
+     */
+    public static boolean staleAfterCancellation(OrderStatus current, OrderStatus target) {
+        return current == OrderStatus.CANCELLED
+                && (target == OrderStatus.PICKED_UP || target == OrderStatus.DELIVERING);
+    }
+
     /** @return true for an already-applied assignment, false for a new assignment. */
     public static boolean assignmentReplay(OrderStatus current, Long assignedShipper, Long incomingShipper) {
         if (incomingShipper == null || incomingShipper <= 0) {
