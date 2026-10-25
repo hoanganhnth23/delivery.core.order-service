@@ -19,6 +19,11 @@ class KafkaListenerTopicConfigurationTest {
                 "${app.kafka.input-topics.restaurant-rejected:restaurant.order-rejected}");
         assertListener(SagaCommandListener.class, "handleUpdateOrderStatusCommand",
                 "${app.kafka.input-topics.saga-update-order-status:saga.command.update-order-status}");
+        assertListener(DeliveryExceptionEventListener.class, "handleDeliveryException",
+                "${app.kafka.input-topics.delivery-exception:delivery.exception.reported}");
+        RetryableTopic retry = DeliveryExceptionEventListener.class.getAnnotation(RetryableTopic.class);
+        assertThat(retry.retryTopicSuffix()).isEqualTo("-retry-order");
+        assertThat(retry.dltTopicSuffix()).isEqualTo(".order.DLT");
     }
 
     @Test

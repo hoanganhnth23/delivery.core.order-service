@@ -79,6 +79,9 @@ public class OrderServiceImpl implements OrderService {
     private CheckoutQuoteService checkoutQuoteService;
 
     @Autowired(required = false)
+    private com.delivery.order_service.service.DeliveryCancellationGate deliveryCancellationGate;
+
+    @Autowired(required = false)
     private OrderCreateIdempotencyService idempotencyService;
 
     @Autowired(required = false)
@@ -708,6 +711,8 @@ public class OrderServiceImpl implements OrderService {
 
         // Kiểm tra điều kiện hủy đơn hàng
         validateCancelOrderConditions(order, userId, role);
+        // Our status is a copy of Delivery's and may lag behind a pickup: Delivery decides.
+        if (deliveryCancellationGate != null) deliveryCancellationGate.requireCancellable(orderId);
 
         // Lưu trạng thái cũ để gửi event
         String previousStatus = order.getStatus().name();

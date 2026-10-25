@@ -7,6 +7,22 @@ import static com.delivery.order.domain.OrderCancellationPolicy.*;
 
 class OrderCancellationPolicyTest {
     @Test
+    void onlyAnOrderOutForDeliveryEndsAsAFailedDelivery() {
+        for (OrderStatus status : OrderStatus.values()) {
+            FailedDelivery expected = switch (status) {
+                case PICKED_UP, DELIVERING -> FailedDelivery.APPLY;
+                case CANCELLED -> FailedDelivery.ALREADY_APPLIED;
+                default -> FailedDelivery.IGNORE;
+            };
+            assertEquals(expected, onDeliveryReturned(status), status.name());
+        }
+        assertEquals(FailedDelivery.IGNORE, onDeliveryReturned(null));
+        assertEquals("Giao hàng thất bại, đồ ăn đã được trả về quán", failedDeliveryReason(" "));
+        assertEquals("Giao hàng thất bại, đồ ăn đã được trả về quán: Khách không nghe máy",
+                failedDeliveryReason(" Khách không nghe máy "));
+    }
+
+    @Test
     void everyStateRetainsAdminGuardBypassButTransitionTableRestriction() {
         for (OrderStatus status : OrderStatus.values()) {
             boolean prePickup = switch (status) {

@@ -36,6 +36,12 @@ public interface OrderEventService {
     void handleRestaurantRejected(RestaurantEvent event);
 
     /**
+     * The delivery failed and the restaurant confirmed the food is back: the order
+     * ends as CANCELLED (DELIVERY_FAILED). Returns false when nothing changed.
+     */
+    boolean handleDeliveryReturned(Long orderId, String deliveryReason);
+
+    /**
      * Handle shipper accepted events
      */
     void handleShipperAccepted(ShipperEvent event);

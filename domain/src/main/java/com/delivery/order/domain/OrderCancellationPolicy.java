@@ -34,6 +34,21 @@ public final class OrderCancellationPolicy {
                 : new Intent("CANCELLED", "CUSTOMER", "CUSTOMER_CANCELLED");
     }
 
+    /** The food went back to the restaurant after a failed delivery: the order ends as cancelled. */
+    public enum FailedDelivery { APPLY, ALREADY_APPLIED, IGNORE }
+
+    /** Only an order that was out for delivery can end as a failed delivery. */
+    public static FailedDelivery onDeliveryReturned(OrderStatus status) {
+        if (status == OrderStatus.CANCELLED) return FailedDelivery.ALREADY_APPLIED;
+        if (status == OrderStatus.PICKED_UP || status == OrderStatus.DELIVERING) return FailedDelivery.APPLY;
+        return FailedDelivery.IGNORE;
+    }
+
+    public static String failedDeliveryReason(String deliveryReason) {
+        String base = "Giao hàng thất bại, đồ ăn đã được trả về quán";
+        return deliveryReason == null || deliveryReason.isBlank() ? base : base + ": " + deliveryReason.trim();
+    }
+
     public static Intent noShipperIntent() {
         return new Intent("SHIPPER_NOT_FOUND", "SYSTEM", "SHIPPER_NOT_FOUND");
     }

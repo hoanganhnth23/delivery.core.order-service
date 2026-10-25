@@ -38,6 +38,7 @@ class OrderOutboxTransactionIntegrationTest {
     @Autowired SagaOrderCommandProcessor sagaOrderCommandProcessor;
     @Autowired TransactionTemplate transactionTemplate;
     @Autowired ObjectMapper objectMapper;
+    @org.springframework.boot.test.mock.mockito.MockBean DeliveryCancellationGate deliveryCancellationGate;
 
     @BeforeEach
     void clean() {
@@ -205,6 +206,21 @@ class OrderOutboxTransactionIntegrationTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Order cancellation already exists with a different actor or reason");
         assertThat(outboxRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void deliveryRefusalLeavesTheOrderAndOutboxUntouched() {
+        Order candidate = newOrder();
+        candidate.setStatus(OrderStatus.ASSIGNED);
+        Order order = orderRepository.save(candidate);
+        org.mockito.Mockito.doThrow(new IllegalStateException("Shipper đã lấy hàng, không thể huỷ đơn"))
+                .when(deliveryCancellationGate).requireCancellable(order.getId());
+
+        assertThatThrownBy(() -> orderService.cancelOrder(order.getId(), 10L, "USER", "changed mind"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Shipper đã lấy hàng, không thể huỷ đơn");
+        assertThat(orderRepository.findById(order.getId()).orElseThrow().getStatus()).isEqualTo(OrderStatus.ASSIGNED);
+        assertThat(outboxRepository.count()).isZero();
     }
 
     @Test
