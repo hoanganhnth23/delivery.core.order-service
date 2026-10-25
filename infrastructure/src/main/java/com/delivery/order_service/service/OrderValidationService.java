@@ -127,10 +127,13 @@ public class OrderValidationService {
     private ValidatedOrderData validateWithRestaurantService(CreateOrderRequest request, Long userId,
             List<String> errors) {
         try {
-            // Chỉ gửi restaurantId và items — không gửi bất kỳ thông tin nhà hàng nào từ
-            // client
+            // Chỉ gửi restaurantId, toạ độ giao hàng và items — không gửi bất kỳ thông tin
+            // nhà hàng nào từ client. Toạ độ cần cho kiểm vùng phục vụ (giống checkout preview);
+            // admission ở trên đã bắt buộc chúng khác null.
             Map<String, Object> orderValidationRequest = Map.of(
                     "restaurantId", request.getRestaurantId(),
+                    "deliveryLat", request.getDeliveryLat(),
+                    "deliveryLng", request.getDeliveryLng(),
                     "items", request.getItems().stream()
                             .map(item -> Map.of(
                                     "menuItemId", item.getMenuItemId(),
