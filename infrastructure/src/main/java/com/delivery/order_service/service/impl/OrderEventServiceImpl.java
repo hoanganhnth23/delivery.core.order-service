@@ -212,6 +212,32 @@ public class OrderEventServiceImpl implements OrderEventService {
 
     @Override
     @Transactional
+    public boolean handleDeliveryReturned(Long orderId, String deliveryReason) {
+        if (orderId == null || orderId <= 0) throw new IllegalArgumentException("orderId is required");
+        Order order = findOrderById(orderId);
+        var decision = com.delivery.order.domain.OrderCancellationPolicy.onDeliveryReturned(
+                order.getStatus() == null ? null : order.getStatus().toDomain());
+        if (decision != com.delivery.order.domain.OrderCancellationPolicy.FailedDelivery.APPLY) {
+            log.info("Delivery return for order {} not applied: status={}, decision={}",
+                    orderId, order.getStatus(), decision);
+            return false;
+        }
+        // Not a cancellation request: Delivery already ended (RETURNED) and Settlement
+        // opened the dispute from the delivery exception, so no order.cancelled is
+        // published (it would make Delivery/Dispatch report a conflict and the
+        // restaurant restock food that was cooked).
+        String reason = com.delivery.order.domain.OrderCancellationPolicy.failedDeliveryReason(deliveryReason);
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setCancelReason(reason);
+        order.setUpdatedAt(LocalDateTime.now());
+        appendNotes(order, reason);
+        orderRepository.save(order);
+        log.info("Order {} cancelled after a failed delivery was returned to the restaurant", orderId);
+        return true;
+    }
+
+    @Override
+    @Transactional
     public void handleShipperAccepted(ShipperEvent event) {
         log.info("🚚 Processing shipper acceptance: orderId={}, shipperId={}", 
                 event.getOrderId(), event.getShipperId());

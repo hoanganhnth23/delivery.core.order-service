@@ -74,6 +74,33 @@ class OrderEventServiceTest {
     }
 
     @Test
+    void returnedDeliveryEndsTheOrderCancelledWithoutPublishingACancellation() {
+        testOrder.setStatus(OrderStatus.DELIVERING);
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(testOrder));
+
+        boolean applied = orderEventService.handleDeliveryReturned(1L, "Khách không nghe máy");
+
+        assertEquals(true, applied);
+        assertEquals(OrderStatus.CANCELLED, testOrder.getStatus());
+        assertEquals("Giao hàng thất bại, đồ ăn đã được trả về quán: Khách không nghe máy",
+                testOrder.getCancelReason());
+        verify(orderRepository).save(testOrder);
+        verifyNoInteractions(orderEventPublisher);
+    }
+
+    @Test
+    void returnedDeliveryIsIgnoredUnlessTheOrderIsOutForDelivery() {
+        for (OrderStatus status : new OrderStatus[] {OrderStatus.CANCELLED, OrderStatus.DELIVERED, OrderStatus.ASSIGNED}) {
+            testOrder.setStatus(status);
+            when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(testOrder));
+            assertEquals(false, orderEventService.handleDeliveryReturned(1L, "x"));
+            assertEquals(status, testOrder.getStatus());
+        }
+        verify(orderRepository, never()).save(any());
+        assertThrows(IllegalArgumentException.class, () -> orderEventService.handleDeliveryReturned(null, "x"));
+    }
+
+    @Test
     void testHandleDeliveryStatusUpdate_Success() {
         // Given
         testOrder.setStatus(OrderStatus.DELIVERING);
