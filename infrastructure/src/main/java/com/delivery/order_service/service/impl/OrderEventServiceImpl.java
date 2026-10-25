@@ -69,6 +69,13 @@ public class OrderEventServiceImpl implements OrderEventService {
         // Map delivery status to order status
         OrderStatus newOrderStatus = mapDeliveryStatusToOrderStatus(event.getStatus());
         
+        if (com.delivery.order.domain.SagaStatusPolicy.staleAfterCancellation(
+                order.getStatus().toDomain(), newOrderStatus.toDomain())) {
+            log.warn("Ignoring stale {} for order {}: already CANCELLED ({})",
+                    newOrderStatus, order.getId(), order.getCancelReason());
+            return;
+        }
+
         if (!newOrderStatus.equals(order.getStatus())) {
             OrderStatus previousStatus = order.getStatus();
             for (com.delivery.order.domain.OrderStatus step :
@@ -217,6 +224,11 @@ public class OrderEventServiceImpl implements OrderEventService {
         Order order = findOrderById(orderId);
         var decision = com.delivery.order.domain.OrderCancellationPolicy.onDeliveryReturned(
                 order.getStatus() == null ? null : order.getStatus().toDomain());
+        if (decision == com.delivery.order.domain.OrderCancellationPolicy.FailedDelivery.NOT_YET) {
+            // Retryable on purpose: Dispatch's pick-up update is still on its way.
+            throw new IllegalStateException("Order " + orderId + " is still " + order.getStatus()
+                    + "; delivery return will be retried");
+        }
         if (decision != com.delivery.order.domain.OrderCancellationPolicy.FailedDelivery.APPLY) {
             log.info("Delivery return for order {} not applied: status={}, decision={}",
                     orderId, order.getStatus(), decision);

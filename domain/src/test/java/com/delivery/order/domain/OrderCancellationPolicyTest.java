@@ -7,12 +7,13 @@ import static com.delivery.order.domain.OrderCancellationPolicy.*;
 
 class OrderCancellationPolicyTest {
     @Test
-    void onlyAnOrderOutForDeliveryEndsAsAFailedDelivery() {
+    void deliveryReturnAppliesFromAssignedAndWaitsWhileOrderLagsBehind() {
         for (OrderStatus status : OrderStatus.values()) {
             FailedDelivery expected = switch (status) {
-                case PICKED_UP, DELIVERING -> FailedDelivery.APPLY;
+                case ASSIGNED, PICKED_UP, DELIVERING -> FailedDelivery.APPLY;
                 case CANCELLED -> FailedDelivery.ALREADY_APPLIED;
-                default -> FailedDelivery.IGNORE;
+                case PENDING, CONFIRMED, FINDING_SHIPPER, WAIT_SHIPPER_CONFIRM -> FailedDelivery.NOT_YET;
+                case DELIVERED, SHIPPER_NOT_FOUND -> FailedDelivery.IGNORE;
             };
             assertEquals(expected, onDeliveryReturned(status), status.name());
         }
@@ -75,5 +76,14 @@ class OrderCancellationPolicyTest {
         assertEquals(new Intent("SHIPPER_NOT_FOUND", "SYSTEM", "SHIPPER_NOT_FOUND"), noShipperIntent());
         for (String reason : new String[]{null, "", " \t"}) assertEquals("No shipper available", noShipperReason(reason));
         assertEquals(" reason ", noShipperReason(" reason "));
+    }
+
+    @Test
+    void onlyPickUpProgressAfterCancellationIsStale() {
+        for (OrderStatus target : OrderStatus.values()) {
+            boolean stale = target == OrderStatus.PICKED_UP || target == OrderStatus.DELIVERING;
+            assertEquals(stale, SagaStatusPolicy.staleAfterCancellation(OrderStatus.CANCELLED, target), target.name());
+            assertFalse(SagaStatusPolicy.staleAfterCancellation(OrderStatus.ASSIGNED, target), target.name());
+        }
     }
 }

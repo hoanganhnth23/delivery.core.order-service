@@ -89,8 +89,8 @@ class OrderEventServiceTest {
     }
 
     @Test
-    void returnedDeliveryIsIgnoredUnlessTheOrderIsOutForDelivery() {
-        for (OrderStatus status : new OrderStatus[] {OrderStatus.CANCELLED, OrderStatus.DELIVERED, OrderStatus.ASSIGNED}) {
+    void returnedDeliveryIsIgnoredOnceTheOrderEndedAnotherWay() {
+        for (OrderStatus status : new OrderStatus[] {OrderStatus.CANCELLED, OrderStatus.DELIVERED, OrderStatus.SHIPPER_NOT_FOUND}) {
             testOrder.setStatus(status);
             when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(testOrder));
             assertEquals(false, orderEventService.handleDeliveryReturned(1L, "x"));
@@ -98,6 +98,45 @@ class OrderEventServiceTest {
         }
         verify(orderRepository, never()).save(any());
         assertThrows(IllegalArgumentException.class, () -> orderEventService.handleDeliveryReturned(null, "x"));
+    }
+
+    @Test
+    void returnedDeliveryAppliesWhileOrderStillShowsAssigned() {
+        // E2E race: Delivery's RETURNED arrived before Dispatch relayed PICKED_UP/DELIVERING.
+        testOrder.setStatus(OrderStatus.ASSIGNED);
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(testOrder));
+
+        assertEquals(true, orderEventService.handleDeliveryReturned(1L, "x"));
+        assertEquals(OrderStatus.CANCELLED, testOrder.getStatus());
+    }
+
+    @Test
+    void returnedDeliveryIsRetriedWhileOrderHasNotSeenTheShipperYet() {
+        testOrder.setStatus(OrderStatus.WAIT_SHIPPER_CONFIRM);
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(testOrder));
+
+        // IllegalStateException is retryable (the listener only excludes IllegalArgumentException).
+        assertThrows(IllegalStateException.class, () -> orderEventService.handleDeliveryReturned(1L, "x"));
+        assertEquals(OrderStatus.WAIT_SHIPPER_CONFIRM, testOrder.getStatus());
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void lateDispatchProgressDoesNotReopenAnOrderCancelledByAFailedDelivery() {
+        testOrder.setStatus(OrderStatus.CANCELLED);
+        testOrder.setCancelReason("Giao hàng thất bại, đồ ăn đã được trả về quán");
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(testOrder));
+        for (String late : new String[] {"PICKED_UP", "DELIVERING"}) {
+            DeliveryStatusUpdatedEvent event = new DeliveryStatusUpdatedEvent();
+            event.setOrderId(1L);
+            event.setStatus(late);
+            event.setUpdatedAt(LocalDateTime.now());
+
+            orderEventService.handleDeliveryStatusUpdate(event);
+        }
+
+        assertEquals(OrderStatus.CANCELLED, testOrder.getStatus());
+        verify(orderRepository, never()).save(any());
     }
 
     @Test
