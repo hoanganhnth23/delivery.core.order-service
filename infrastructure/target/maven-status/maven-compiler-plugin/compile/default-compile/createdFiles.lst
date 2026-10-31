@@ -15,6 +15,7 @@ com/delivery/order_service/service/LivestreamCheckoutPriceClient$QuoteItem.class
 com/delivery/order_service/entity/OutboxEvent.class
 com/delivery/order_service/controller/InternalOrderController.class
 com/delivery/order_service/service/OrderCreateIdempotencyService$2.class
+com/delivery/order_service/service/DeliveryCancellationGate$Reply.class
 com/delivery/order_service/dto/event/OrderCreatedEvent.class
 com/delivery/order_service/service/InventoryReservationClient.class
 com/delivery/order_service/service/SagaOrderSequenceGapException.class
@@ -40,6 +41,7 @@ com/delivery/order_service/dto/response/CheckoutPreviewResponse$PreviewItemDetai
 com/delivery/order_service/service/impl/OrderEventServiceImpl.class
 com/delivery/order_service/service/CheckoutReservationClient$FlashQuote.class
 com/delivery/order_service/dto/response/OrderItemResponse.class
+com/delivery/order_service/service/DeliveryCancellationGate.class
 com/delivery/order_service/listener/SagaCommandListener.class
 com/delivery/order_service/config/RoutingClientConfig.class
 com/delivery/order_service/security/SecurityConfig.class
@@ -55,6 +57,7 @@ com/delivery/order_service/dto/event/ShipperEvent.class
 com/delivery/order_service/dto/response/OrderResponse.class
 com/delivery/order_service/common/constants/RoleConstants.class
 com/delivery/order_service/service/impl/OrderServiceImpl$3.class
+com/delivery/order_service/listener/DeliveryExceptionEventListener.class
 com/delivery/order_service/service/CheckoutReservationClient$VoucherQuote.class
 com/delivery/order_service/service/impl/OrderServiceImpl$4$1.class
 com/delivery/order_service/service/SagaCommandReceiptService.class
