@@ -20,4 +20,5 @@ jobs:
       image_name: "order-service"
       dockerfile: "./Dockerfile"
       platform: "linux/amd64"
+      java_version: "21"
     secrets: inherit

@@ -1,2 +1,4 @@
+com/delivery/order/domain/OrderCancellationPolicy$1.class
 com/delivery/order/domain/RestaurantPaymentPolicy$1.class
 com/delivery/order/domain/OrderStatus$1.class
+com/delivery/order/domain/OrderCancellationPolicy$FailedDelivery.class
