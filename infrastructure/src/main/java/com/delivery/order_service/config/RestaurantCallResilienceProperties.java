@@ -6,12 +6,12 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "app.resilience.restaurant")
 public class RestaurantCallResilienceProperties {
-    private long timeoutMs = 2000;
-    private float failureRateThreshold = 50;
-    private int slidingWindowSize = 20;
-    private long waitOpenSeconds = 30;
-    private int permittedHalfOpenCalls = 5;
-    private int maxConcurrentCalls = 8;
+    private long timeoutMs = 3000;
+    private float failureRateThreshold = 60;
+    private int slidingWindowSize = 100;
+    private long waitOpenSeconds = 5;
+    private int permittedHalfOpenCalls = 10;
+    private int maxConcurrentCalls = 64;
 
     public long getTimeoutMs() { return timeoutMs; }
     public void setTimeoutMs(long timeoutMs) { this.timeoutMs = Math.max(100, Math.min(timeoutMs, 30_000)); }
@@ -34,6 +34,6 @@ public class RestaurantCallResilienceProperties {
     }
     public int getMaxConcurrentCalls() { return maxConcurrentCalls; }
     public void setMaxConcurrentCalls(int maxConcurrentCalls) {
-        this.maxConcurrentCalls = Math.max(1, Math.min(maxConcurrentCalls, 200));
+        this.maxConcurrentCalls = Math.max(1, Math.min(maxConcurrentCalls, 500));
     }
 }
